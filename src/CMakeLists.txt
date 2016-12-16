@@ -90,5 +90,7 @@ transactionrollbackokframe.h
 transactionselectframe.h
 transactionselectokframe.h
 watchable.cpp
-tcpconnection.cpp
 )
+if (NOT BUILD_PURE)
+  add_sources(tcpconnection.cpp)
+endif()

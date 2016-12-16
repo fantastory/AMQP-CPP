@@ -26,6 +26,7 @@
 #include <sys/filio.h>
 #endif
 
+#include "tcpdefines.h"
 /**
  *  Set up namespace
  */
