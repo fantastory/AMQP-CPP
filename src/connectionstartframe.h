@@ -8,6 +8,9 @@
  *  @copyright 2014 Copernica BV
  */
 
+#undef minor
+#undef major
+
 /**
  *  Set up namespace
  */
