@@ -20,7 +20,7 @@
  *  Dependencies
  */
 #include "frame.h"
-#include "../include/receivedframe.h"
+#include "../include/amqpcpp/receivedframe.h"
 
 /**
  *  Set up namespace

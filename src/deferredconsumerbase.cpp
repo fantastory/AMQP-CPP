@@ -11,7 +11,7 @@
  *  Dependencies
  */
 #include "includes.h"
-#include "../include/deferredconsumerbase.h"
+#include "../include/amqpcpp/deferredconsumerbase.h"
 #include "basicdeliverframe.h"
 #include "basicgetokframe.h"
 #include "basicheaderframe.h"

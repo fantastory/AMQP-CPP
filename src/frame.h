@@ -15,7 +15,7 @@
 /**
  *  Dependencies
  */
-#include "../include/outbuffer.h"
+#include "../include/amqpcpp/outbuffer.h"
 #include "protocolexception.h"
 
 /**
