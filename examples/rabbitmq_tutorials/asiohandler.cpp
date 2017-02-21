@@ -86,9 +86,9 @@ void AsioHandler::doConnect(const std::string& host, uint16_t port)
     _timer.async_wait([this](const boost::system::error_code& ec){
         if(!ec && !_connected)
         {
-            std::cerr<<"Connection timed out";
-            _socket.cancel();
-            exit(1);
+            boost::system::error_code ignoredError;
+            _socket.cancel(ignoredError);
+            onNetworkError(ec, "Connection timed out");
         }
     });
 
@@ -107,8 +107,7 @@ void AsioHandler::doConnect(const std::string& host, uint16_t port)
                 }
                 else
                 {
-                    std::cerr<<"Connection error:"<<ec<<std::endl;
-                    exit(1);
+                    onNetworkError(ec, "connect");
                 }
             });
 
@@ -139,8 +138,7 @@ void AsioHandler::doRead()
                 }
                 else
                 {
-                    std::cerr<<"Error reading:"<<ec<<std::endl;
-                    exit(1);
+                    onNetworkError(ec, "read");
                 }
             });
 }
@@ -171,9 +169,9 @@ void AsioHandler::doWrite()
                 }
                 else
                 {
-                    std::cerr<<"Error writing:"<<ec<<std::endl;
-                    _socket.close();
-                    exit(1);
+                    boost::system::error_code ignoredError;
+                    _socket.close(ignoredError);
+                    onNetworkError(ec, "write");
                 }
             });
 }
@@ -219,4 +217,10 @@ void AsioHandler::onClosed(AMQP::Connection *connection)
     {
         _socket.close();
     }
+}
+
+void AsioHandler::onNetworkError(boost::system::error_code ec, const std::string &info) 
+{
+    std::cerr<<"network error: " << info <<":"<<ec<<std::endl;
+    boost::asio::detail::throw_error(ec);
 }

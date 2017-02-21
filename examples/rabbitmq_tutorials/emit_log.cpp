@@ -6,24 +6,31 @@
 
 int main(int argc, const char* argv[])
 {
-    const std::string msg =
+    try {
+        const std::string msg =
             argc > 1 ? join(&argv[1], &argv[argc], " ") : "info: Hello World!";
 
-    boost::asio::io_service ioService;
-    AsioHandler handler(ioService);
-    handler.connect("localhost", 5672);
+        boost::asio::io_service ioService;
+        AsioHandler handler(ioService);
+        handler.connect("localhost", 5672);
 
-    AMQP::Connection connection(&handler, AMQP::Login("guest", "guest"), "/");
+        AMQP::Connection connection(&handler, AMQP::Login("guest", "guest"), "/");
 
-    boost::asio::deadline_timer t(ioService, boost::posix_time::millisec(100));
-    AMQP::Channel channel(&connection);
-    channel.declareExchange("logs", AMQP::fanout).onSuccess([&]()
-    {
-        channel.publish("logs", "", msg);
-        std::cout << " [x] Sent "<<msg<< std::endl;
-        t.async_wait([&](const boost::system::error_code&){ioService.stop();});
-    });
+        std::string exchangeName = "logs";
 
-    ioService.run();
+        boost::asio::deadline_timer t(ioService, boost::posix_time::millisec(100));
+        AMQP::Channel channel(&connection);
+        channel.declareExchange(exchangeName, AMQP::fanout).onSuccess([&]()
+        {
+            channel.publish(exchangeName, "", msg);
+            std::cout << " [x] Sent "<<msg<< std::endl;
+            t.async_wait([&](const boost::system::error_code&) {ioService.stop(); });
+        });
+
+        ioService.run();
+    }
+    catch (std::exception &) {
+
+    }
     return 0;
 }

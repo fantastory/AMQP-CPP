@@ -14,6 +14,8 @@
  */
 #pragma once
 
+#include "tcpdefines.h"
+
 /**
  *  Set up namespace
  */

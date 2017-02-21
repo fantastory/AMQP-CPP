@@ -27,6 +27,9 @@ private:
 
     void parseData();
 
+protected:
+    void onNetworkError(boost::system::error_code error, const std::string &info);
+
 private:
 
     boost::asio::io_service& _ioService;

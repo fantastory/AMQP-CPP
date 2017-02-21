@@ -10,7 +10,7 @@
  *  Dependencies
  */
 #include "includes.h"
-#include "../include/tcpdefines.h"
+#include "../include/amqpcpp/tcpdefines.h"
 
 /**
  *  Set up namespace
