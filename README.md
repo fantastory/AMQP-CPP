@@ -70,6 +70,18 @@ additional TCP module (because you take care of handling the network stuff
 yourself), you can also compile a pure form of the library. Use `make pure` 
 and `make install` for that.
 
+For users on windows enviroment with visual studio:
+* with visual studio 2015 - use nuget package https://www.nuget.org/packages/AMQP-CPP/
+* if you want to try other compiler here is the path:
+  * download repository
+  * install cmake
+    * https://chocolatey.org/packages/cmake
+    * if it fails to setup your PATH, try
+    * https://chocolatey.org/packages/cmake.install
+  * enter GIT_DIR/windows/x64
+  * run cmake ../.. -G "Visual Studio 14 2015 Win64"
+  * check solution file GIT_DIR/windows/AMQP-CPP.sln
+
 For users on a non-Linux environment: this library is known to work on your
 environment too (after all, it does not do any operating specific system calls), 
 but it might take some extra effort to get your compiler to compile it. Please 
