@@ -3,6 +3,7 @@
 
 #include "tools.h"
 #include "asiohandler.h"
+#include "testcredentials.h"
 
 int main(int argc, const char* argv[])
 {
@@ -12,9 +13,9 @@ int main(int argc, const char* argv[])
 
         boost::asio::io_service ioService;
         AsioHandler handler(ioService);
-        handler.connect("localhost", 5672);
+        handler.connect(AMQP_TEST_HOST, AMQP_TEST_PORT);
 
-        AMQP::Connection connection(&handler, AMQP::Login("guest", "guest"), "/");
+        AMQP::Connection connection(&handler, AMQP::Login(AMQP_TEST_LOGIN, AMQP_TEST_PASSWORD), AMQP_TEST_VIRTUALHOST);
 
         std::string exchangeName = "logs";
 
