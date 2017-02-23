@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>AMQP-CPP-vc140</id>
+    <version>2.6.1.1</version>
+    <authors>CopernicaMarketingSoftware</authors>
+    <owners>fantastory</owners>
+    <licenseUrl>https://github.com/CopernicaMarketingSoftware/AMQP-CPP/blob/master/LICENSE</licenseUrl>
+    <projectUrl>https://github.com/fantastory/AMQP-CPP</projectUrl>
+    <iconUrl>https://www.rabbitmq.com/favicon.ico</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>C++ library for communicating with a RabbitMQ message broker.</description>
+    <releaseNotes>Initial build.</releaseNotes>
+    <tags>native cpp amqp rabbitmq</tags>
+    <dependencies>
+      <dependency id="AMQP-CPP" version="2.6.1.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="x86\Debug\*"   target="lib\native\x86\Debug" />
+    <file src="x86\Release\*" target="lib\native\x86\Release" />
+    <file src="x64\Debug\*"   target="lib\native\x64\Debug" />
+    <file src="x64\Release\*" target="lib\native\x64\Release" />
+	<file src="AMQP-CPP-vc.targets" target="build\native\AMQP-CPP-vc140.targets" />
+  </files>
+</package>
