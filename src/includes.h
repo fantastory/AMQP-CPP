@@ -94,4 +94,3 @@
 #include "basicframe.h"
 #include "transactionframe.h"
 
-
