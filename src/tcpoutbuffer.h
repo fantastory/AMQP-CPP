@@ -36,6 +36,8 @@ typedef std::make_signed<size_t>::type ssize_t;
 #include <sys/filio.h>
 #endif
 
+#include "tcpdefines.h"
+
 /**
  *  Set up namespace
  */

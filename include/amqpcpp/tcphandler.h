@@ -14,8 +14,6 @@
  */
 #pragma once
 
-#include "tcpdefines.h"
-
 /**
  *  Set up namespace
  */
@@ -25,6 +23,16 @@ namespace AMQP {
  *  Forward declarations
  */
 class TcpConnection;
+
+namespace tcp {
+#if _WIN32 || _WIN64
+	typedef SOCKET Socket;
+	constexpr tcp::Socket InvalidSocket = INVALID_SOCKET;
+#else 
+	typedef int Socket;
+	constexpr tcp::Socket InvalidSocket = -1;
+#endif
+}
 
 /**
  *  Class definition

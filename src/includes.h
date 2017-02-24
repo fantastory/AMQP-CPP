@@ -30,6 +30,8 @@
 #include <vector>
 #include <queue>
 #include <sys/types.h>
+
+#ifndef AMQP_CPP_BUILD_PURE
 #if _MSC_VER
 #include <winsock2.h>
 #include <Ws2tcpip.h>
@@ -39,6 +41,8 @@
 #include <unistd.h>
 #include <netinet/tcp.h>
 #endif
+#endif
+
 #include <functional>
 #include <stdexcept>
 
@@ -53,7 +57,6 @@
 #include "../include/amqpcpp/outbuffer.h"
 #include "../include/amqpcpp/watchable.h"
 #include "../include/amqpcpp/monitor.h"
-#include "../include/amqpcpp/tcpdefines.h"
 
 // amqp types
 #include "../include/amqpcpp/field.h"
@@ -104,6 +107,4 @@
 #include "queueframe.h"
 #include "basicframe.h"
 #include "transactionframe.h"
-#include "addressinfo.h"
-
-
+#include "tcpdefines.h"
