@@ -13,7 +13,7 @@
     <releaseNotes>Initial build.</releaseNotes>
     <tags>native cpp amqp rabbitmq</tags>
     <dependencies>
-      <dependency id="AMQP-CPP" version="2.6.1.1" />
+      <dependency id="AMQP-CPP" version="2.6.1.2" />
     </dependencies>
   </metadata>
   <files>
