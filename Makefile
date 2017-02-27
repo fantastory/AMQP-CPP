@@ -26,7 +26,7 @@ clean:
 install:
 		mkdir -p ${INCLUDE_DIR}/$(LIBRARY_NAME)
 		mkdir -p ${LIBRARY_DIR}
-		cp -f $(LIBRARY_NAME).h ${INCLUDE_DIR}
+		cp -f include/$(LIBRARY_NAME).h ${INCLUDE_DIR}
 		cp -f include/*.h ${INCLUDE_DIR}/$(LIBRARY_NAME)
 		-cp -f src/lib$(LIBRARY_NAME).so.$(VERSION) ${LIBRARY_DIR}
 		-cp -f src/lib$(LIBRARY_NAME).a.$(VERSION) ${LIBRARY_DIR}
