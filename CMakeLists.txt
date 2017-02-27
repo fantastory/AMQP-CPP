@@ -39,9 +39,9 @@ else()
   )
 endif()
 Include_directories(${PROJECT_SOURCE_DIR})
-install(DIRECTORY include/ DESTINATION include/amqpcpp
+install(DIRECTORY include/amqpcpp DESTINATION include
         FILES_MATCHING PATTERN "*.h")
-install(FILES amqpcpp.h DESTINATION include)
+install(FILES include/amqpcpp.h DESTINATION include)
 
 option(BUILD_TUTORIALS "build rabbitmq tutorials" OFF)
 if(BUILD_TUTORIALS)
