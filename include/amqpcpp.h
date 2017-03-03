@@ -9,7 +9,9 @@
 #pragma once
 
 #if _MSC_VER
-#define NOMINMAX
+#   ifndef NOMINMAX
+#       define NOMINMAX
+#   endif
 #endif
 
 // base C++ include files

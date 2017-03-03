@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>AMQP-CPP</id>
-    <version>2.6.1.2</version>
+    <version>2.6.1.3</version>
     <authors>CopernicaMarketingSoftware</authors>
     <owners>fantastory</owners>
     <licenseUrl>https://github.com/CopernicaMarketingSoftware/AMQP-CPP/blob/master/LICENSE</licenseUrl>
