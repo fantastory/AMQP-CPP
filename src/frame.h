@@ -85,25 +85,6 @@ public:
     virtual bool synchronous() const { return false; }
 
     /**
-     *  Retrieve the buffer in AMQP wire-format for
-     *  sending over the socket connection
-     */
-    OutBuffer buffer() const
-    {
-        // we need an output buffer
-        OutBuffer buffer(totalSize());
-
-        // fill the buffer
-        fill(buffer);
-
-        // append an end of frame byte (but not when still negotiating the protocol)
-        if (needsSeparator()) buffer.add((uint8_t)206);
-
-        // return the created buffer
-        return buffer;
-    }
-
-    /**
      *  Process the frame
      *  @param  connection      The connection over which it was received
      *  @return bool            Was it succesfully processed?
