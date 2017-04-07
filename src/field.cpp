@@ -59,6 +59,17 @@ Field::operator const std::string& () const
 }
 
 /**
+*  Cast to char *
+*  @return std::string
+*/
+const char *Field::asCStr() const
+{
+    //use string operator
+    auto && ret = operator const std::string& ();
+    return ret.c_str();
+}
+
+/**
  *  Cast to array
  *  @return Array
  */
