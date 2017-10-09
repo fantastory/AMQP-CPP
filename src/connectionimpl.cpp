@@ -3,13 +3,15 @@
  *
  *  Implementation of an AMQP connection
  *
- *  @copyright 2014 - 2016 Copernica BV
+ *  @copyright 2014 - 2017 Copernica BV
  */
 #include "includes.h"
 #include "protocolheaderframe.h"
 #include "connectioncloseokframe.h"
 #include "connectioncloseframe.h"
 #include "reducedbuffer.h"
+#include "passthroughbuffer.h"
+#include "heartbeatframe.h"
 
 /**
  *  set namespace
@@ -257,22 +259,28 @@ void ConnectionImpl::setConnected()
 
     // inform handler
     _handler->onConnected(_parent);
+    
+    // the handler could have destructed us
+    if (!monitor.valid()) return;
 
     // empty the queue of messages
-    while (monitor.valid() && !_queue.empty())
+    while (!_queue.empty())
     {
         // get the next message
-        OutBuffer buffer(std::move(_queue.front()));
-
-        // remove it from the queue
-        _queue.pop();
+        const auto &buffer = _queue.front();
+        
+        // data is going to be sent, thus connection is not idle
+        _idle = false;
 
         // send it
         _handler->onData(_parent, buffer.data(), buffer.size());
-    }
+        
+        // stop if monitor is gone
+        if (!monitor.valid()) return;
 
-    // leap out if object is dead
-    if (!monitor.valid()) return;
+        // remove it from the queue
+        _queue.pop();
+    }
 
     // if the close method was called before, and no channel is waiting
     // for an answer, we can now safely send out the close frame
@@ -328,19 +336,19 @@ bool ConnectionImpl::send(const Frame &frame)
     // it is impossible to send out this frame successfully
     if (frame.totalSize() > _maxFrame) return false;
 
-    // we need an output buffer
-    OutBuffer buffer(frame.buffer());
-
     // are we still setting up the connection?
     if ((_state == state_connected && _queue.empty()) || frame.partOfHandshake())
     {
-        // send the buffer
-        _handler->onData(_parent, buffer.data(), buffer.size());
+        // the data will be sent, so connection is not idle
+        _idle = false;
+        
+        // we need an output buffer (this will immediately send the data)
+        PassthroughBuffer buffer(_parent, _handler, frame);
     }
     else
     {
         // the connection is still being set up, so we need to delay the message sending
-        _queue.push(std::move(buffer));
+        _queue.emplace(frame);
     }
 
     // done
@@ -352,7 +360,7 @@ bool ConnectionImpl::send(const Frame &frame)
  *
  *  @param  buffer      the buffer with data to send
  */
-bool ConnectionImpl::send(OutBuffer &&buffer)
+bool ConnectionImpl::send(CopiedBuffer &&buffer)
 {
     // this only works when we are already connected
     if (_state != state_connected) return false;
@@ -360,17 +368,38 @@ bool ConnectionImpl::send(OutBuffer &&buffer)
     // are we waiting for other frames to be sent before us?
     if (_queue.empty())
     {
+        // data will be sent, thus connection is not empty
+        _idle = false;
+        
         // send it directly
         _handler->onData(_parent, buffer.data(), buffer.size());
     }
     else
     {
         // add to the list of waiting buffers
-        _queue.push(std::move(buffer));
+        _queue.emplace(std::move(buffer));
     }
 
     // done
     return true;
+}
+
+/**
+ *  Send a ping / heartbeat frame to keep the connection alive
+ *  @param  force       also send heartbeat if connection is not idle
+ *  @return bool
+ */
+bool ConnectionImpl::heartbeat(bool force)
+{
+    // do nothing if the connection is not idle (but we do reset the idle state to ensure
+    // that the next heartbeat will be sent if nothing is going to change from now on)
+    if (!force && !_idle) return _idle = true;
+    
+    // send a frame
+    if (!send(HeartbeatFrame())) return false;
+    
+    // frame has been sent, we treat the connection as idle now until some other data is sent over it
+    return _idle = true;
 }
 
 /**

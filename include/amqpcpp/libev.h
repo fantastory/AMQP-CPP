@@ -119,6 +119,111 @@ private:
         }
     };
 
+    /**
+     *  Timer class to periodically fire a heartbeat
+     */
+    class Timer
+    {
+    private:
+        /**
+         *  The event loop to which it is attached
+         *  @var struct ev_loop
+         */
+        struct ev_loop *_loop;
+
+        /**
+         *  The actual watcher structure
+         *  @var struct ev_io
+         */
+        struct ev_timer _timer;
+
+        /**
+         *  Callback method that is called by libev when the timer expires
+         *  @param  loop        The loop in which the event was triggered
+         *  @param  timer       Internal timer object
+         *  @param  revents     The events that triggered this call
+         */
+        static void callback(struct ev_loop *loop, struct ev_timer *timer, int revents)
+        {
+            // retrieve the connection
+            TcpConnection *connection = static_cast<TcpConnection*>(timer->data);
+
+            // send the heartbeat
+            connection->heartbeat();
+        }
+        
+        /**
+         *  Stop the timer
+         */
+        void stop()
+        {
+            // do nothing if it was never set
+            if (_timer.data == nullptr) return;
+
+            // restore loop refcount
+            ev_ref(_loop);
+
+            // stop the timer
+            ev_timer_stop(_loop, &_timer);
+            
+            // restore data nullptr to indicate that timer is not set
+            _timer.data = nullptr;
+        }
+
+    public:
+        /**
+         *  Constructor
+         *  @param  loop            The current event loop
+         */
+        Timer(struct ev_loop *loop) : _loop(loop)
+        {
+            // there is no data yet
+            _timer.data = nullptr;
+            
+            // initialize the libev structure
+            ev_timer_init(&_timer, callback, 60.0, 60.0);
+        }
+
+        /**
+         *  Watchers cannot be copied or moved
+         *
+         *  @param  that    The object to not move or copy
+         */
+        Timer(Watcher &&that) = delete;
+        Timer(const Watcher &that) = delete;
+
+        /**
+         *  Destructor
+         */
+        virtual ~Timer()
+        {
+            // stop the timer
+            stop();
+        }
+
+        /**
+         *  Change the expire time
+         *  @param  connection
+         *  @param  timeout
+         */
+        void set(TcpConnection *connection, uint16_t timeout)
+        {
+            // stop timer in case it was already set
+            stop();
+            
+            // store the connection in the data "void*"
+            _timer.data = connection;
+
+            // set the timer
+            ev_timer_set(&_timer, timeout, timeout);
+
+            // and start it
+            ev_timer_start(_loop, &_timer);
+
+            // the timer should not keep the event loop active
+            ev_unref(_loop);
+        }
+    };
 
     /**
      *  The event loop
@@ -131,6 +236,12 @@ private:
      *  @var std::map<int,Watcher>
      */
     std::map<int,std::unique_ptr<Watcher>> _watchers;
+    
+    /**
+     *  A timer to periodically send out heartbeats
+     *  @var Timer
+     */
+    Timer _timer;
 
 
     /**
@@ -165,12 +276,31 @@ private:
         }
     }
 
+protected:
+    /**
+     *  Method that is called when the heartbeat frequency is negotiated between the server and the client. 
+     *  @param  connection      The connection that suggested a heartbeat interval
+     *  @param  interval        The suggested interval from the server
+     *  @return uint16_t        The interval to use
+     */
+    virtual uint16_t onNegotiate(TcpConnection *connection, uint16_t interval) override
+    {
+        // skip if no heartbeats are needed
+        if (interval == 0) return 0;
+        
+        // set the timer
+        _timer.set(connection, interval);
+        
+        // we agree with the interval
+        return interval;
+    }
+
 public:
     /**
      *  Constructor
      *  @param  loop    The event loop to wrap
      */
-    LibEvHandler(struct ev_loop *loop) : _loop(loop) {}
+    LibEvHandler(struct ev_loop *loop) : _loop(loop), _timer(loop) {}
 
     /**
      *  Destructor

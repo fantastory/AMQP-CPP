@@ -51,6 +51,10 @@ public:
      *  alternative heartbeat interval, you can override this method
      *  to use an other interval. You should return 0 if you want to
      *  disable heartbeats.
+     * 
+     *  If heartbeats are enabled, you yourself are responsible to send
+     *  out a heartbeat every *interval* number of seconds by calling
+     *  the Connection::heartbeat() method.
      *
      *  @param  connection      The connection that suggested a heartbeat interval
      *  @param  interval        The suggested interval from the server
@@ -58,8 +62,8 @@ public:
      */
     virtual uint16_t onNegotiate(Connection *connection, uint16_t interval)
     {
-        // default implementation, suggested heartbeat is ok
-        return interval;
+        // default implementation, disable heartbeats
+        return 0;
     }
 
     /**

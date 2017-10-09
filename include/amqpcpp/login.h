@@ -97,6 +97,41 @@ public:
         // append other elements
         return result.append(_user).append("\0",1).append(_password);
     }
+    
+    /**
+     *  Comparison operator
+     *  @param  that
+     *  @return bool
+     */
+    bool operator==(const Login &that) const
+    {
+        // username and password must match
+        return _user == that._user && _password == that._password;
+    }
+
+    /**
+     *  Comparison operator
+     *  @param  that
+     *  @return bool
+     */
+    bool operator!=(const Login &that) const
+    {
+        // the opposite of operator==
+        return !operator==(that);
+    }
+
+    /**
+     *  Friend function to allow writing the login to a stream
+     *  @param  stream
+     *  @param  login
+     *  @return std::ostream
+     */
+    friend std::ostream &operator<<(std::ostream &stream, const Login &login)
+    {
+        // write username and password
+        return stream << login._user << "@" << login._password;
+    }
+
 };
 
 /**

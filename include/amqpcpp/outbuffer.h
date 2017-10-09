@@ -4,7 +4,7 @@
  *  This is a utility class for writing various data types to a binary
  *  string, and converting the values to network byte order
  *
- *  @copyright 2014 Copernica BV
+ *  @copyright 2014 - 2017 Copernica BV
  */
 
 /**
@@ -29,97 +29,15 @@ namespace AMQP {
  */
 class OutBuffer
 {
-private:
+protected:
     /**
-     *  Pointer to the beginning of the buffer
-     *  @var std::unique_ptr<char[]>
+     *  The method that adds the actual data
+     *  @param  data
+     *  @param  size
      */
-    std::unique_ptr<char[]> _buffer;
-
-    /**
-     *  Pointer to the buffer to be filled
-     *  @var char*
-     */
-    char *_current;
-
-    /**
-     *  Current size of the buffer
-     *  @var size_t
-     */
-    size_t _size;
-
-    /**
-     *  The total capacity of the out buffer
-     *  @var size_t
-     */
-    size_t _capacity;
-
+    virtual void append(const void *data, size_t size) = 0;
 
 public:
-    /**
-     *  Constructor
-     *  @param  capacity
-     */
-    OutBuffer(uint32_t capacity) :
-        _buffer(new char[capacity]),
-        _current(_buffer.get()),
-        _size(0),
-        _capacity(capacity)
-    {}
-
-    /**
-     *  Copy constructor
-     *  @param  that
-     */
-    OutBuffer(const OutBuffer &that) :
-        _buffer(new char[that._capacity]),
-        _current(_buffer.get() + that._size),
-        _size(that._size),
-        _capacity(that._capacity)
-    {
-        // copy memory
-        memcpy(_buffer.get(), that._buffer.get(), _size);
-    }
-
-    /**
-     *  Move constructor
-     *  @param  that
-     */
-    OutBuffer(OutBuffer &&that) :
-        _buffer(std::move(that._buffer)),
-        _current(that._current),
-        _size(that._size),
-        _capacity(that._capacity)
-    {
-        // reset the other object
-        that._size = 0;
-        that._capacity = 0;
-        that._current = nullptr;
-    }
-
-    /**
-     *  Destructor
-     */
-    virtual ~OutBuffer() = default;
-
-    /**
-     *  Get access to the internal buffer
-     *  @return const char*
-     */
-    const char *data() const
-    {
-        return _buffer.get();
-    }
-
-    /**
-     *  Current size of the output buffer
-     *  @return size_t
-     */
-    size_t size() const
-    {
-        return _size;
-    }
-
     /**
      *  Add a binary buffer to the buffer
      *  @param  string  char* to the string
@@ -127,9 +45,8 @@ public:
      */
     void add(const char *string, size_t size)
     {
-        memcpy(_current, string, size);
-        _current += size;
-        _size += size;
+        // append data
+        append(string, size);
     }
 
     /**
@@ -139,7 +56,8 @@ public:
      */
     void add(const std::string &string)
     {
-        add(string.c_str(), string.size());
+        // add data
+        append(string.c_str(), string.size());
     }
 
     /**
@@ -148,9 +66,8 @@ public:
      */
     void add(uint8_t value)
     {
-        memcpy(_current, &value, sizeof(value));
-        _current += sizeof(value);
-        _size += sizeof(value);
+        // append one byte
+        append(&value, sizeof(value));
     }
 
     /**
@@ -159,10 +76,11 @@ public:
      */
     void add(uint16_t value)
     {
+        // convert to network byte order
         uint16_t v = htobe16(value);
-        memcpy(_current, &v, sizeof(v));
-        _current += sizeof(v);
-        _size += sizeof(v);
+        
+        // append the data
+        append(&v, sizeof(v));
     }
 
     /**
@@ -171,10 +89,11 @@ public:
      */
     void add(uint32_t value)
     {
+        // convert to network byte order
         uint32_t v = htobe32(value);
-        memcpy(_current, &v, sizeof(v));
-        _current += sizeof(v);
-        _size += sizeof(v);
+        
+        // append the data
+        append(&v, sizeof(v));
     }
 
     /**
@@ -183,10 +102,11 @@ public:
      */
     void add(uint64_t value)
     {
+        // convert to network byte order
         uint64_t v = htobe64(value);
-        memcpy(_current, &v, sizeof(v));
-        _current += sizeof(v);
-        _size += sizeof(v);
+        
+        // append the data
+        append(&v, sizeof(v));
     }
 
     /**
@@ -195,9 +115,8 @@ public:
      */
     void add(int8_t value)
     {
-        memcpy(_current, &value, sizeof(value));
-        _current += sizeof(value);
-        _size += sizeof(value);
+        // append the data
+        append(&value, sizeof(value));
     }
 
     /**
@@ -206,10 +125,11 @@ public:
      */
     void add(int16_t value)
     {
+        // convert to network byte order
         int16_t v = htobe16(value);
-        memcpy(_current, &v, sizeof(v));
-        _current += sizeof(v);
-        _size += sizeof(v);
+        
+        // append the data
+        append(&v, sizeof(v));
     }
 
     /**
@@ -218,10 +138,11 @@ public:
      */
     void add(int32_t value)
     {
+        // convert into network byte order
         int32_t v = htobe32(value);
-        memcpy(_current, &v, sizeof(v));
-        _current += sizeof(v);
-        _size += sizeof(v);
+
+        // append the data
+        append(&v, sizeof(v));
     }
 
     /**
@@ -230,10 +151,11 @@ public:
      */
     void add(int64_t value)
     {
+        // copy into the buffer
         int64_t v = htobe64(value);
-        memcpy(_current, &v, sizeof(v));
-        _current += sizeof(v);
-        _size += sizeof(v);
+        
+        // append the data
+        append(&v, sizeof(v));
     }
 
     /**
@@ -242,9 +164,8 @@ public:
      */
     void add(float value)
     {
-        memcpy(_current, &value, sizeof(value));
-        _current += sizeof(value);
-        _size += sizeof(value);
+        // append the data
+        append(&value, sizeof(value));
     }
 
     /**
@@ -253,9 +174,8 @@ public:
      */
     void add(double value)
     {
-        memcpy(_current, &value, sizeof(value));
-        _current += sizeof(value);
-        _size += sizeof(value);
+        // append the data
+        append(&value, sizeof(value));
     }
 };
 

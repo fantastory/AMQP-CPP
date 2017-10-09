@@ -3,13 +3,12 @@
  *
  *  Implementation for a channel
  *
- *  @copyright 2014 Copernica BV
+ *  @copyright 2014 - 2017 Copernica BV
  */
 #include "includes.h"
 #include "basicdeliverframe.h"
 #include "basicgetokframe.h"
 #include "basicreturnframe.h"
-#include "messageimpl.h"
 #include "consumedmessage.h"
 #include "returnedmessage.h"
 #include "channelopenframe.h"
@@ -40,7 +39,6 @@
 #include "basicrejectframe.h"
 #include "basicgetframe.h"
 
-
 /**
  *  Set up namespace
  */
@@ -58,6 +56,41 @@ ChannelImpl::~ChannelImpl()
 {
     // remove this channel from the connection (but not if the connection is already destructed)
     if (_connection) _connection->remove(this);
+}
+
+/**
+ *  Callback that is called when an error occurs.
+ *
+ *  Only one error callback can be registered. Calling this function
+ *  multiple times will remove the old callback.
+ *
+ *  @param  callback    the callback to execute
+ */
+void ChannelImpl::onError(const ErrorCallback &callback)
+{
+    // store callback
+    _errorCallback = callback;
+
+    // if the channel is connected, all is ok
+    if (connected()) return;
+    
+    // is the channel closing down?
+    if (_state == state_closing) return callback("Channel is closing down");
+
+    // the channel is closed, but what is the connection doing?
+    if (_connection == nullptr) return callback("Channel is not linked to a connection");
+    
+    // if the connection is valid, this is a pure channel error
+    if (_connection->connected()) return callback("Channel is in an error state, but the connection is valid");
+
+    // the connection is closing down
+    if (_connection->closing()) return callback("Channel is in an error state, the AMQP connection is closing down");
+
+    // the connection is already closed
+    if (_connection->closed()) return callback("Channel is in an error state, the AMQP connection has been closed");
+   
+    // direct call if channel is already in error state
+    callback("Channel is in error state, something went wrong with the AMQP connection");
 }
 
 /**
@@ -660,7 +693,7 @@ bool ChannelImpl::send(const Frame &frame)
     {
         // we need to wait until the synchronous frame has
         // been processed, so queue the frame until it was
-        _queue.emplace(frame.synchronous(), frame.buffer());
+        _queue.emplace(frame.synchronous(), frame);
 
         // it was of course not actually sent but we pretend
         // that it was, because no error occured
@@ -690,19 +723,22 @@ void ChannelImpl::onSynchronized()
     Monitor monitor(this);
 
     // send all frames while not in synchronous mode
-    while (monitor.valid() && _connection && !_synchronous && !_queue.empty())
+    while (_connection && !_synchronous && !_queue.empty())
     {
         // retrieve the first buffer and synchronous
-        auto pair = std::move(_queue.front());
-
-        // remove from the list
-        _queue.pop();
+        auto &pair = _queue.front();
 
         // mark as synchronous if necessary
         _synchronous = pair.first;
 
         // send it over the connection
         _connection->send(std::move(pair.second));
+
+        // the user space handler may have destructed this channel object
+        if (!monitor.valid()) return;
+
+        // remove from the list
+        _queue.pop();
     }
 }
 

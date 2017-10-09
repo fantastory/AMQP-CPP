@@ -19,7 +19,7 @@
 #include "watchable.h"
 #include "connectionhandler.h"
 #include "channelimpl.h"
-#include "outbuffer.h"
+#include "copiedbuffer.h"
 #include "monitor.h"
 #include "login.h"
 #include <unordered_map>
@@ -122,13 +122,13 @@ protected:
      *  Queued messages that should be sent after the connection has been established
      *  @var    queue
      */
-    std::queue<OutBuffer> _queue;
-
+    std::queue<CopiedBuffer> _queue;
+    
     /**
-     *  Heartbeat delay
-     *  @var uint16_t
+     *  Is the connection idle (meaning: a heartbeat is necessary)
+     *  @var    bool
      */
-    uint16_t _heartbeat = 0;
+    bool _idle = true;
 
     /**
      *  Helper method to send the close frame
@@ -211,6 +211,26 @@ public:
     {
         // state must be connected
         return _state == state_connected;
+    }
+
+    /**
+     *  Are we closing down?
+     *  @return bool
+     */
+    bool closing() const
+    {
+        // state must be connected
+        return _state == state_closing;
+    }
+
+    /**
+     *  Are we closed?
+     *  @return bool
+     */
+    bool closed() const
+    {
+        // state must be connected
+        return _state == state_closed;
     }
 
     /**
@@ -328,7 +348,7 @@ public:
      *
      *  @param  buffer      the buffer with data to send
      */
-    bool send(OutBuffer &&buffer);
+    bool send(CopiedBuffer &&buffer);
 
     /**
      *  Get a channel by its identifier
@@ -394,15 +414,6 @@ public:
     }
 
     /**
-     *  Heartbeat delay
-     *  @return uint16_t
-     */
-    uint16_t heartbeat() const
-    {
-        return _heartbeat;
-    }
-
-    /**
      *  Set the heartbeat delay
      *  @param  heartbeat       suggested heartbeat by server
      *  @return uint16_t        accepted heartbeat by client
@@ -410,7 +421,7 @@ public:
     uint16_t setHeartbeat(uint16_t heartbeat)
     {
         // pass to the handler
-        return _heartbeat = _handler->onNegotiate(_parent, heartbeat);
+        return _handler->onNegotiate(_parent, heartbeat);
     }
 
     /**
@@ -421,6 +432,14 @@ public:
         // pass to handler
         _handler->onHeartbeat(_parent);
     }
+    
+    /**
+     *  Send a heartbeat to keep the connection alive
+     *  By default, this function does nothing if the connection is not in an idle state
+     *  @param  force           always send the heartbeat, even if the connection is not idle
+     *  @return bool
+     */
+    bool heartbeat(bool force=false);
 
     /**
      *  The actual connection is a friend and can construct this class

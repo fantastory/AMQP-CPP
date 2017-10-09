@@ -5,7 +5,7 @@
  *  that has a private constructor so that it can not be used from outside
  *  the AMQP library
  *
- *  @copyright 2014 Copernica BV
+ *  @copyright 2014 - 2017 Copernica BV
  */
 
 /**
@@ -19,7 +19,7 @@
 #include "exchangetype.h"
 #include "watchable.h"
 #include "callbacks.h"
-#include "outbuffer.h"
+#include "copiedbuffer.h"
 #include "deferred.h"
 #include "monitor.h"
 #include <memory>
@@ -119,7 +119,7 @@ private:
      *
      *  @var std::queue
      */
-    std::queue<std::pair<bool, OutBuffer>> _queue;
+    std::queue<std::pair<bool, CopiedBuffer>> _queue;
 
     /**
      *  Are we currently operating in synchronous mode?
@@ -213,14 +213,7 @@ public:
      *
      *  @param  callback    the callback to execute
      */
-    void onError(const ErrorCallback &callback)
-    {
-        // store callback
-        _errorCallback = callback;
-
-        // direct call if channel is already in error state
-        if (!connected()) callback("Channel is in error state");
-    }
+    void onError(const ErrorCallback &callback);
 
     /**
      *  Pause deliveries on a channel
@@ -515,7 +508,7 @@ public:
      *  @return bool
      */
     bool reject(uint64_t deliveryTag, int flags);
-
+    
     /**
      *  Recover messages that were not yet ack'ed
      *  @param  flags               optional flags

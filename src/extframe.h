@@ -19,7 +19,7 @@
 /**
  *  Dependencies
  */
-#include "frame.h"
+#include "../include/frame.h"
 #include "../include/amqpcpp/receivedframe.h"
 
 /**
